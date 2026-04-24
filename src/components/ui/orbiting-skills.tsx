@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState, memo } from 'react';
-import { Car, Bike, ShieldCheck, Zap, Clock, MapPin } from 'lucide-react';
+import { LucideIcon, Car, Bike, ShieldCheck, Zap, Clock, MapPin } from 'lucide-react';
 
 // --- Type Definitions ---
 type FeatureType = 'car' | 'bike' | 'safety' | 'speed' | 'time' | 'location';
@@ -32,7 +32,7 @@ interface GlowingOrbitPathProps {
 }
 
 // --- Icon Mapping ---
-const iconComponents: Record<FeatureType, { component: React.ElementType; color: string }> = {
+const iconComponents: Record<FeatureType, { component: LucideIcon; color: string }> = {
   car: { component: Car, color: '#3b82f6' },
   bike: { component: Bike, color: '#f59e0b' },
   safety: { component: ShieldCheck, color: '#10b981' },
@@ -169,8 +169,8 @@ export default function OrbitingFeatures() {
             </div>
           </div>
 
-          <GlowingOrbitPath radius={100} glowColor="cyan" delay={0} />
-          <GlowingOrbitPath radius={180} glowColor="purple" delay={1.5} />
+          <GlowingOrbitPath radius={100} glowColor="cyan" animationDelay={0} />
+          <GlowingOrbitPath radius={180} glowColor="purple" animationDelay={1.5} />
 
           {featuresConfig.map((config) => (
             <OrbitingFeature key={config.id} config={config} angle={time * config.speed + config.phaseShift} />

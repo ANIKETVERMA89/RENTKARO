@@ -13,7 +13,9 @@ import { Footer } from "@/components/sections/footer";
 
 import { useSearchParams } from "next/navigation";
 
-export default function VehiclesPage() {
+import { Suspense } from "react";
+
+function VehiclesList() {
   const searchParams = useSearchParams();
   const { vehicles, isLoadingVehicles } = useApp();
 
@@ -192,5 +194,13 @@ export default function VehiclesPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function VehiclesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-black uppercase tracking-widest">Loading Vehicles...</div>}>
+      <VehiclesList />
+    </Suspense>
   );
 }

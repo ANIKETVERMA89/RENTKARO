@@ -38,8 +38,10 @@ export function TimelineContent({
   const localRef = React.useRef(null);
   const isInView = useInView(timelineRef || localRef, { once: true, margin: "-10%" });
 
+  const Tag = Component as any;
+
   return (
-    <Component
+    <Tag
       ref={localRef}
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
@@ -48,6 +50,6 @@ export function TimelineContent({
       className={cn(className)}
     >
       {children}
-    </Component>
+    </Tag>
   );
 }

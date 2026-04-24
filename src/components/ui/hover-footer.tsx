@@ -192,43 +192,102 @@ export default function HoverFooter() {
   ];
 
   return (
-    <footer className="relative h-fit rounded-3xl overflow-hidden mx-6 mb-6 mt-0 text-zinc-400">
-      <div className="max-w-7xl mx-auto p-14 z-40 relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 lg:gap-16 pb-12">
-          {/* Brand */}
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-center space-x-2">
-              <Car size={28} className="text-[#3ca2fa]" strokeWidth={1.5} />
-              <span className="text-white text-2xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+    <footer
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        margin: "0 24px 24px",
+        borderRadius: "24px",
+        background: "#0a0a0c",
+        border: "1px solid rgba(255,255,255,0.07)",
+        color: "#71717a",
+      }}
+    >
+      {/* ── Main content grid ── */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 10,
+          maxWidth: "1280px",
+          margin: "0 auto",
+          padding: "72px 64px 56px",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr",
+            gap: "64px",
+            paddingBottom: "56px",
+          }}
+        >
+          {/* ── Brand ── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <Car size={26} color="#3ca2fa" strokeWidth={1.5} />
+              <span
+                style={{
+                  color: "#ffffff",
+                  fontSize: "1.375rem",
+                  fontWeight: 700,
+                  fontFamily: "'Outfit', sans-serif",
+                  letterSpacing: "-0.01em",
+                }}
+              >
                 RentKaro
               </span>
             </div>
-            <p className="text-sm leading-relaxed">
-              The Ethereal Monolith of Motion. Access the world&apos;s most
-              definitive automotive experiences — curated, delivered, unforgettable.
+            <p style={{ fontSize: "0.9rem", lineHeight: 1.75, color: "#52525b", maxWidth: "240px" }}>
+              The Ethereal Monolith of Motion. Access the world&apos;s most definitive
+              automotive experiences — curated, delivered, unforgettable.
             </p>
-            <p className="text-xs text-zinc-600 uppercase tracking-widest">
+            <p style={{ fontSize: "0.7rem", color: "#3f3f46", textTransform: "uppercase", letterSpacing: "0.15em" }}>
               Est. 2024 · Mumbai, India
             </p>
           </div>
 
-          {/* Link sections */}
+          {/* ── Link sections ── */}
           {footerLinks.map((section) => (
             <div key={section.title}>
-              <h4 className="text-white text-sm font-semibold mb-6 uppercase tracking-widest">
+              <h4
+                style={{
+                  color: "#ffffff",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  marginBottom: "24px",
+                }}
+              >
                 {section.title}
               </h4>
-              <ul className="space-y-3">
+              <ul style={{ display: "flex", flexDirection: "column", gap: "14px", listStyle: "none", padding: 0, margin: 0 }}>
                 {section.links.map((link) => (
-                  <li key={link.label} className="relative">
+                  <li key={link.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <a
                       href={link.href}
-                      className="text-sm hover:text-[#3ca2fa] transition-colors duration-200"
+                      style={{
+                        fontSize: "0.9rem",
+                        color: "#71717a",
+                        textDecoration: "none",
+                        transition: "color 0.2s",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = "#3ca2fa")}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = "#71717a")}
                     >
                       {link.label}
                     </a>
                     {link.pulse && (
-                      <span className="absolute top-1 right-0 w-1.5 h-1.5 rounded-full bg-[#3ca2fa] animate-pulse" />
+                      <span
+                        style={{
+                          width: "6px",
+                          height: "6px",
+                          borderRadius: "50%",
+                          background: "#3ca2fa",
+                          flexShrink: 0,
+                          animation: "pulse 2s cubic-bezier(0.4,0,0.6,1) infinite",
+                        }}
+                      />
                     )}
                   </li>
                 ))}
@@ -236,21 +295,35 @@ export default function HoverFooter() {
             </div>
           ))}
 
-          {/* Contact */}
+          {/* ── Concierge ── */}
           <div>
-            <h4 className="text-white text-sm font-semibold mb-6 uppercase tracking-widest">
+            <h4
+              style={{
+                color: "#ffffff",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                marginBottom: "24px",
+              }}
+            >
               Concierge
             </h4>
-            <ul className="space-y-4">
+            <ul style={{ display: "flex", flexDirection: "column", gap: "18px", listStyle: "none", padding: 0, margin: 0 }}>
               {contactInfo.map((item, i) => (
-                <li key={i} className="flex items-center space-x-3">
+                <li key={i} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   {item.icon}
                   {item.href ? (
-                    <a href={item.href} className="text-sm hover:text-[#3ca2fa] transition-colors">
+                    <a
+                      href={item.href}
+                      style={{ fontSize: "0.875rem", color: "#71717a", textDecoration: "none", transition: "color 0.2s" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = "#3ca2fa")}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = "#71717a")}
+                    >
                       {item.text}
                     </a>
                   ) : (
-                    <span className="text-sm">{item.text}</span>
+                    <span style={{ fontSize: "0.875rem" }}>{item.text}</span>
                   )}
                 </li>
               ))}
@@ -258,39 +331,81 @@ export default function HoverFooter() {
           </div>
         </div>
 
-        <hr className="border-t border-white/5 my-8" />
+        {/* ── Divider ── */}
+        <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", marginBottom: "32px" }} />
 
-        {/* Bottom row */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-sm space-y-4 md:space-y-0">
-          <div className="flex space-x-5 text-zinc-600">
+        {/* ── Bottom bar ── */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "16px",
+          }}
+        >
+          {/* Social icons */}
+          <div style={{ display: "flex", gap: "20px" }}>
             {socialLinks.map(({ icon, label, href }) => (
               <a
                 key={label}
                 href={href}
                 aria-label={label}
-                className="hover:text-[#3ca2fa] transition-colors duration-200"
+                style={{ color: "#3f3f46", textDecoration: "none", transition: "color 0.2s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#3ca2fa")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#3f3f46")}
               >
                 {icon}
               </a>
             ))}
           </div>
-          <div className="flex items-center gap-6 text-zinc-600 text-xs">
+
+          {/* Legal links */}
+          <div style={{ display: "flex", gap: "28px" }}>
             {["Privacy Policy", "Terms of Service", "Fleet Insurance"].map((l) => (
-              <a key={l} href="#" className="hover:text-zinc-300 transition-colors">{l}</a>
+              <a
+                key={l}
+                href="#"
+                style={{ fontSize: "0.75rem", color: "#3f3f46", textDecoration: "none", transition: "color 0.2s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#71717a")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#3f3f46")}
+              >
+                {l}
+              </a>
             ))}
           </div>
-          <p className="text-xs text-zinc-700">
+
+          {/* Copyright */}
+          <p style={{ fontSize: "0.75rem", color: "#3f3f46" }}>
             &copy; {new Date().getFullYear()} RentKaro. All rights reserved.
           </p>
         </div>
       </div>
 
-      {/* Big text hover watermark */}
-      <div className="lg:flex hidden h-[30rem] -mt-52 -mb-36">
-        <TextHoverEffect text="RentKaro" className="z-50" />
+      {/* ── Big text hover watermark ── */}
+      <div
+        style={{
+          display: "flex",
+          height: "240px",
+          marginTop: "-40px",
+          position: "relative",
+          zIndex: 10,
+        }}
+      >
+        <TextHoverEffect text="RentKaro" />
       </div>
 
-      <FooterBackgroundGradient />
+      {/* ── Ambient glow ── */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(60,162,250,0.07) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }}
+      />
     </footer>
   );
 }

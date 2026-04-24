@@ -1,0 +1,229 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme inline {
+  --color-sparkles-color: var(--sparkles-color);
+  --color-gradient-color: var(--gradient-color);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+:root {
+  --color-deep-navy: #0B1D3A;
+  --color-electric-blue: #000000;
+  --color-vivid-cyan: #000000;
+  --color-charcoal: #1E293B;
+  --color-slate: #64748B;
+  --color-off-white: #F8FAFC;
+  --color-soft-gray: #E2E8F0;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-gold: #F6C343;
+  --gradient-color: #3b82f6;
+  --sparkles-color: #3b82f6;
+  --background: #ffffff;
+  --foreground: #000000;
+  /* Noir Aesthetic Tokens */
+  --color-bg: #101214;
+  --color-surface: #161A1D;
+  --color-muted-surface: #1D2125;
+  --color-border: #2C333A;
+  --color-text-secondary: #596773;
+  --color-text-primary: #C7D1DB;
+  --color-heading: #DEE4EA;
+  --color-bg-2: #C7D1DB;
+  --color-text-primary-rgb: 199, 209, 219;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --gradient-color: #3b82f6;
+  --sparkles-color: #ffffff;
+  /* Noir Aesthetic Tokens (Dark Mode) */
+  --color-bg: #101214;
+  --color-surface: #161A1D;
+  --color-muted-surface: #1D2125;
+  --color-border: #2C333A;
+  --color-text-secondary: #596773;
+  --color-text-primary: #C7D1DB;
+  --color-heading: #DEE4EA;
+  --color-bg-2: #C7D1DB;
+  --color-text-primary-rgb: 199, 209, 219;
+}
+
+* {
+  margin: 8px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--foreground);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-deep-navy);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-electric-blue);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-vivid-cyan);
+}
+
+/* Selection */
+::selection {
+  background: rgba(6, 182, 212, 0.3);
+  color: white;
+}
+
+/* Keyframes */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(37, 99, 235, 0.3);
+  }
+}
+
+/* Utility animation classes */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Glass card utility */
+.glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(90deg, #334155, #000000);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Futuristic Hero Component Animations */
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.fade-in-subtitle {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.explore-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 24px;
+  border-radius: 100px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: fadeIn 1s ease-out forwards;
+  opacity: 0;
+}
+
+.explore-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) translateX(-50%);
+}
+
+.explore-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}
+
+.explore-btn:hover .explore-arrow {
+  transform: translateY(4px);
+}

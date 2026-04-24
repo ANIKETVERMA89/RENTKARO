@@ -1,147 +1,187 @@
-"use client";
-
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Car, Mail, Lock, LucideIcon, ArrowRight, Loader2, Globe } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useApp } from "@/store/useStore";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useApp();
-  const router = useRouter();
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      login({
-        id: `U-${Date.now()}`,
-        name: email.split('@')[0],
-        email: email,
-        role: "renter"
-      });
-      router.push("/dashboard");
-      setIsLoading(false);
-    }, 1500);
-  };
-
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-black relative overflow-hidden">
-      {/* Background patterns */}
+    <div
+      className="relative flex items-center justify-center overflow-hidden"
+      style={{ background: "#131315", minHeight: "100vh", color: "#e5e1e4" }}
+    >
+      {/* Background image */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-[100px]" />
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBm62WF198EP3mBKRC4rkYCk4KxgpWKbHLWuFSNlQdzXvBX8lBvfnQgQMyBHNRV-dbnlA9BD7yH89NoaAcX19v8us93TAc6amzIF-CVpmZruhD25nok4-gRP1FaWiHmaKT0jsxrR2mS1R8GCUL4cgX-CGjSAOM08RA1p8cTz-NaCLjXxyIAAIkZ3V1EJ4otefCH_ZIB2Ldqku3TSsUTZHEA-Lkjr1FZqx0QzrCN9UeOA3FHGlv5Ss0EJLZoUkWbikYnYVPmktZByXOM"
+          alt="Luxury car interior"
+          style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.4 }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to top, #131315 0%, rgba(19,19,21,0.8) 50%, transparent 100%)" }}
+        />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md relative z-10"
-      >
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <Car className="w-8 h-8 text-white" />
-            <span className="text-2xl font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
-              Rent<span className="text-slate-500">Karo</span>
-            </span>
-          </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-slate-500">Login to manage your rides and bookings</p>
+      {/* Form */}
+      <main className="relative z-10 w-full flex flex-col items-center" style={{ maxWidth: "448px", padding: "0 24px" }}>
+        {/* Brand */}
+        <div className="text-center mb-10" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <h1
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontSize: "clamp(2.25rem, 5vw, 3rem)",
+              fontWeight: 900,
+              letterSpacing: "-0.04em",
+              color: "#ffffff",
+              marginBottom: "12px",
+            }}
+          >
+            RentKaro
+          </h1>
+          <p style={{ color: "#c6c6cb", fontWeight: 500, letterSpacing: "0.05em" }}>
+            Enter the ethereal fleet.
+          </p>
         </div>
 
-        <Card className="bg-white/[0.04] border-white/10 backdrop-blur-2xl shadow-2xl overflow-hidden">
-          <form onSubmit={handleLogin}>
-            <CardHeader className="space-y-1 pt-8">
-              <CardTitle className="text-lg text-white">Sign in to your account</CardTitle>
-              <CardDescription className="text-slate-500">
-                Enter your details below to access your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-400">Email Address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-600" />
-                  <Input
-                    id="email"
-                    placeholder="name@example.com"
-                    type="email"
-                    required
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder-slate-700 focus:border-white/20"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
+        {/* Card */}
+        <div
+          style={{
+            width: "100%",
+            background: "rgba(14,14,16,0.4)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            border: "1px solid rgba(71,71,71,0.2)",
+            borderRadius: "0.75rem",
+            padding: "40px",
+            boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
+          }}
+        >
+          <form style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Email */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label
+                htmlFor="email"
+                style={{ fontSize: "0.75rem", color: "#c6c6cb", letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: "4px" }}
+              >
+                Email Address
+              </label>
+              <div className="relative flex items-center">
+                <span
+                  className="material-symbols-outlined"
+                  style={{ position: "absolute", left: "16px", color: "#919191", fontSize: "20px" }}
+                >
+                  mail
+                </span>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  style={{
+                    width: "100%",
+                    background: "rgba(14,14,16,0.5)",
+                    border: "1px solid rgba(71,71,71,0.2)",
+                    borderRadius: "0.5rem",
+                    padding: "14px 16px 14px 48px",
+                    color: "#ffffff",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                    transition: "border-color 0.3s ease",
+                  }}
+                />
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="password" className="text-slate-400">Password</Label>
-                  <Link href="#" className="text-xs text-slate-500 hover:text-white transition-colors">Forgot password?</Link>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-600" />
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder-slate-700 focus:border-white/20"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
+            </div>
+
+            {/* Password */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div className="flex justify-between items-end" style={{ marginBottom: "4px" }}>
+                <label
+                  htmlFor="password"
+                  style={{ fontSize: "0.75rem", color: "#c6c6cb", letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: "4px" }}
+                >
+                  Password
+                </label>
+                <a href="#" style={{ fontSize: "0.75rem", color: "#c6c6cb", textDecoration: "none" }}>Forgot?</a>
               </div>
-              <Button type="submit" className="w-full py-6 text-base font-bold bg-white text-black hover:bg-slate-200" disabled={isLoading}>
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <>Sign In <ArrowRight className="ml-2 h-4 w-4" /></>
-                )}
-              </Button>
-            </CardContent>
+              <div className="relative flex items-center">
+                <span
+                  className="material-symbols-outlined"
+                  style={{ position: "absolute", left: "16px", color: "#919191", fontSize: "20px" }}
+                >
+                  lock
+                </span>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  style={{
+                    width: "100%",
+                    background: "rgba(14,14,16,0.5)",
+                    border: "1px solid rgba(71,71,71,0.2)",
+                    borderRadius: "0.5rem",
+                    padding: "14px 16px 14px 48px",
+                    color: "#ffffff",
+                    fontSize: "0.875rem",
+                    outline: "none",
+                    transition: "border-color 0.3s ease",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Submit */}
+            <Link
+              href="/dashboard/bookings"
+              style={{
+                display: "block",
+                marginTop: "16px",
+                padding: "16px",
+                background: "#39393b",
+                color: "#ffffff",
+                fontWeight: 500,
+                borderRadius: "9999px",
+                textAlign: "center",
+                textDecoration: "none",
+                transition: "opacity 0.3s ease",
+                boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
+              }}
+            >
+              Sign In
+            </Link>
           </form>
 
-          <div className="px-6 pb-6">
-            <div className="relative flex items-center justify-center my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10" />
-              </div>
-              <span className="relative bg-black px-3 text-xs uppercase text-slate-600">Or continue with</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" className="border-white/10 hover:bg-white/5 text-white">
-                <Globe className="mr-2 h-4 w-4" /> Google
-              </Button>
-              <Button variant="outline" className="border-white/10 hover:bg-white/5 text-white">
-                <Globe className="mr-2 h-4 w-4" /> Facebook
-              </Button>
+          {/* Social */}
+          <div style={{ marginTop: "32px", display: "flex", flexDirection: "column", alignItems: "center", gap: "24px" }}>
+            <span style={{ fontSize: "0.75rem", color: "#919191", letterSpacing: "0.15em", textTransform: "uppercase" }}>
+              Or continue with
+            </span>
+            <div className="flex w-full gap-4">
+              {["Google", "Apple"].map((provider) => (
+                <button
+                  key={provider}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(71,71,71,0.2)",
+                    borderRadius: "9999px",
+                    color: "#ffffff",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    transition: "background 0.3s ease",
+                  }}
+                >
+                  {provider}
+                </button>
+              ))}
             </div>
           </div>
+        </div>
 
-          <CardFooter className="bg-white/[0.02] border-t border-white/5 py-6 flex justify-center">
-            <p className="text-sm text-slate-500">
-              Don&apos;t have an account?{" "}
-              <Link href="/register" className="text-white font-bold hover:underline">
-                Sign up for free
-              </Link>
-            </p>
-          </CardFooter>
-        </Card>
-
-        <p className="text-center mt-8 text-xs text-slate-500 uppercase tracking-[0.2em] font-medium">
-          © 2026 RentKaro — All Rights Reserved
+        <p style={{ marginTop: "40px", fontSize: "0.875rem", color: "#c6c6cb" }}>
+          Don&apos;t have an account?{" "}
+          <Link href="/register" style={{ color: "#ffffff", fontWeight: 500, textDecoration: "none" }}>
+            Sign Up
+          </Link>
         </p>
-      </motion.div>
+      </main>
     </div>
   );
 }

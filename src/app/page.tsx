@@ -1,7 +1,7 @@
 "use client";
 
 import { TopNav } from "@/components/ui/top-nav";
-import { SiteFooter } from "@/components/ui/site-footer";
+import HoverFooter from "@/components/ui/hover-footer";
 import Link from "next/link";
 
 const featuredCars = [
@@ -194,34 +194,51 @@ export default function HomePage() {
 
         {/* ── Stats Strip ── */}
         <section
-          className="py-20"
           style={{
-            borderTop: "1px solid rgba(71,71,71,0.1)",
-            borderBottom: "1px solid rgba(71,71,71,0.1)",
-            background: "rgba(14,14,16,0.5)",
+            padding: "80px 0 100px",
+            borderTop: "1px solid rgba(255,255,255,0.05)",
+            borderBottom: "1px solid rgba(255,255,255,0.05)",
+            background: "rgba(14,14,16,0.6)",
+            marginBottom: "0",
           }}
         >
-          <div className="max-w-7xl mx-auto px-6 md:px-12">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center" style={{ divideColor: "rgba(71,71,71,0.1)" }}>
+          <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 48px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "0",
+              }}
+            >
               {stats.map((stat, i) => (
-                <div key={i} className="px-4">
+                <div
+                  key={i}
+                  style={{
+                    textAlign: "center",
+                    padding: "0 24px",
+                    borderRight: i < stats.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                  }}
+                >
                   <div
                     style={{
                       fontFamily: "'Outfit', sans-serif",
-                      fontSize: "clamp(2rem, 4vw, 3rem)",
+                      fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
                       fontWeight: 700,
                       color: "#ffffff",
-                      marginBottom: "8px",
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1,
+                      marginBottom: "12px",
                     }}
                   >
                     {stat.value}
                   </div>
                   <div
                     style={{
-                      fontSize: "0.75rem",
-                      color: "#c6c6cb",
+                      fontSize: "0.6875rem",
+                      color: "#52525b",
                       textTransform: "uppercase",
                       letterSpacing: "0.15em",
+                      fontWeight: 500,
                     }}
                   >
                     {stat.label}
@@ -233,24 +250,44 @@ export default function HomePage() {
         </section>
 
         {/* ── Featured Fleet ── */}
-        <section className="py-32" style={{ background: "#131315" }}>
-          <div className="max-w-7xl mx-auto px-6 md:px-12">
+        <section style={{ padding: "96px 0 96px", background: "#131315" }}>
+          <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 48px" }}>
             {/* Section Header */}
-            <div className="flex justify-between items-end mb-16">
-              <div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+                marginBottom: "64px",
+              }}
+            >
+              <div style={{ textAlign: "left" }}>
+                <p
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    color: "#919191",
+                    marginBottom: "16px",
+                  }}
+                >
+                  Curated Selection
+                </p>
                 <h2
                   style={{
                     fontFamily: "'Outfit', sans-serif",
-                    fontSize: "clamp(2rem, 4vw, 3rem)",
+                    fontSize: "clamp(2.25rem, 5vw, 3.5rem)",
                     fontWeight: 700,
                     color: "#ffffff",
-                    letterSpacing: "-0.02em",
-                    marginBottom: "16px",
+                    letterSpacing: "-0.03em",
+                    lineHeight: 1,
+                    marginBottom: "20px",
                   }}
                 >
                   Featured Fleet
                 </h2>
-                <p style={{ color: "#c6c6cb", fontSize: "1.125rem", maxWidth: "36rem" }}>
+                <p style={{ color: "#8e8e93", fontSize: "1rem", maxWidth: "32rem", lineHeight: 1.7 }}>
                   A meticulously curated selection of engineering marvels ready for your command.
                 </p>
               </div>
@@ -375,7 +412,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      <SiteFooter />
+      <HoverFooter />
     </div>
   );
 }

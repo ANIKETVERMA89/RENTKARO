@@ -1,4 +1,8 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { SideNav } from "@/components/ui/side-nav";
+import Link from "next/link";
 
 const vendorNav = [
   { icon: "dashboard", label: "Dashboard", href: "/vendor" },
@@ -12,7 +16,7 @@ const metrics = [
   {
     icon: "account_balance_wallet",
     label: "Total Revenue",
-    value: "$42,850",
+    value: "₹42,850",
     badge: "+12.5%",
     trendIcon: "trending_up",
     sparkPath1: "M0,50 Q20,30 40,40 T80,20 T100,10 L100,50 Z",
@@ -52,7 +56,7 @@ const bookingRows = [
     clientType: "Verified Member",
     dates: "Oct 12 - Oct 15",
     days: "3 Days",
-    value: "$1,250",
+    value: "₹1,250",
     status: "Pending",
     statusBg: "#ffffff",
     statusText: "#000000",
@@ -65,7 +69,7 @@ const bookingRows = [
     clientType: "Corporate Account",
     dates: "Oct 14 - Oct 20",
     days: "6 Days",
-    value: "$4,800",
+    value: "₹4,800",
     status: "Confirmed",
     statusBg: "#39393b",
     statusText: "#ffffff",
@@ -79,7 +83,7 @@ const bookingRows = [
     clientType: "First Time",
     dates: "Oct 15 - Oct 16",
     days: "1 Day",
-    value: "$650",
+    value: "₹650",
     status: "In Progress",
     statusBg: "#2a2a2c",
     statusText: "#c6c6cb",
@@ -88,6 +92,72 @@ const bookingRows = [
 ];
 
 export default function VendorDashboardPage() {
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("rk_user") || "{}");
+        const [fleetRes, bookingsRes] = await Promise.all([
+          fetch(`http://localhost:5000/get-provider-vehicles/${user.email}`),
+          fetch(`http://localhost:5000/get-provider-bookings/${user.email}`)
+        ]);
+        
+        const fleetData = await fleetRes.json();
+        const bookingsData = await bookingsRes.json();
+        
+        setVehicles(fleetData);
+        setBookings(bookingsData);
+      } catch (err) {
+        console.error("Failed to fetch dashboard data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const totalRevenue = bookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+  const activeBookings = bookings.length;
+  const fleetUtilization = vehicles.length > 0 ? Math.round((activeBookings / vehicles.length) * 100) : 0;
+
+  const dynamicMetrics = [
+    {
+      icon: "account_balance_wallet",
+      label: "Total Revenue",
+      value: `₹${totalRevenue.toLocaleString()}`,
+      badge: "+12.5%",
+      trendIcon: "trending_up",
+      sparkPath1: "M0,50 Q20,30 40,40 T80,20 T100,10 L100,50 Z",
+      sparkPath2: "M0,50 Q20,30 40,40 T80,20 T100,10",
+      gradId: "grad1",
+    },
+    {
+      icon: "key",
+      label: "Active Bookings",
+      value: activeBookings.toString(),
+      badge: "+4.2%",
+      trendIcon: "trending_up",
+      sparkPath1: "M0,50 Q10,40 30,45 T70,30 T100,15 L100,50 Z",
+      sparkPath2: "M0,50 Q10,40 30,45 T70,30 T100,15",
+      gradId: "grad2",
+    },
+    {
+      icon: "local_shipping",
+      label: "Fleet Utilization",
+      value: `${fleetUtilization}%`,
+      sub: `of ${vehicles.length} units`,
+      badge: "Stable",
+      trendIcon: null,
+      sparkPath1: null,
+      sparkPath2: null,
+      gradId: null,
+      isDonut: true,
+    },
+  ];
+
   return (
     <div
       style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#131315", color: "#e5e1e4" }}
@@ -149,31 +219,33 @@ export default function VendorDashboardPage() {
                 Real-time metrics for your fleet performance.
               </p>
             </div>
-            <button
-              style={{
-                background: "#ffffff",
-                color: "#000000",
-                padding: "12px 24px",
-                borderRadius: "9999px",
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                border: "none",
-                cursor: "pointer",
-                boxShadow: "0 8px 30px rgba(255,255,255,0.12)",
-                alignSelf: "flex-start",
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: "20px", fontVariationSettings: "'FILL' 1" }}>add</span>
-              Add Vehicle
-            </button>
+            <Link href="/vendor/add-vehicle" style={{ textDecoration: "none" }}>
+              <button
+                style={{
+                  background: "#ffffff",
+                  color: "#000000",
+                  padding: "12px 24px",
+                  borderRadius: "9999px",
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 8px 30px rgba(255,255,255,0.12)",
+                  alignSelf: "flex-start",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "20px", fontVariationSettings: "'FILL' 1" }}>add</span>
+                Add Vehicle
+              </button>
+            </Link>
           </header>
 
           {/* Metrics grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ marginBottom: "48px" }}>
-            {metrics.map((m) => (
+            {dynamicMetrics.map((m) => (
               <div
                 key={m.label}
                 className="glass-panel rounded-xl relative overflow-hidden group"
@@ -319,7 +391,7 @@ export default function VendorDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bookingRows.map((row, i) => (
+                  {bookings.map((row, i) => (
                     <tr
                       key={i}
                       style={{
@@ -330,23 +402,23 @@ export default function VendorDashboardPage() {
                       <td style={{ padding: "20px 24px" }}>
                         <div className="flex items-center gap-4">
                           <div style={{ width: "48px", height: "32px", borderRadius: "4px", background: "#2a2a2c", overflow: "hidden", flexShrink: 0 }}>
-                            <img src={row.carImg} alt={row.carName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            <img src={row.vehicle_img} alt={row.vehicle_name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                           </div>
                           <div>
-                            <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "#ffffff" }}>{row.carName}</p>
-                            <p style={{ fontSize: "0.75rem", color: "#c6c6cb" }}>{row.carLic}</p>
+                            <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "#ffffff" }}>{row.vehicle_name}</p>
+                            <p style={{ fontSize: "0.75rem", color: "#c6c6cb" }}>{String(row.vehicle_id).slice(0,8)}</p>
                           </div>
                         </div>
                       </td>
                       <td style={{ padding: "20px 24px" }}>
-                        <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "#ffffff" }}>{row.client}</p>
-                        <p style={{ fontSize: "0.75rem", color: "#c6c6cb" }}>{row.clientType}</p>
+                        <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "#ffffff" }}>{row.user_id}</p>
+                        <p style={{ fontSize: "0.75rem", color: "#c6c6cb" }}>Member</p>
                       </td>
                       <td style={{ padding: "20px 24px" }}>
-                        <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "#ffffff" }}>{row.dates}</p>
-                        <p style={{ fontSize: "0.75rem", color: "#c6c6cb" }}>{row.days}</p>
+                        <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "#ffffff" }}>{new Date(row.created_at).toLocaleDateString()}</p>
+                        <p style={{ fontSize: "0.75rem", color: "#c6c6cb" }}>1 Day</p>
                       </td>
-                      <td style={{ padding: "20px 24px", fontSize: "0.875rem", fontWeight: 500, color: "#ffffff" }}>{row.value}</td>
+                      <td style={{ padding: "20px 24px", fontSize: "0.875rem", fontWeight: 500, color: "#ffffff" }}>₹{row.amount}</td>
                       <td style={{ padding: "20px 24px" }}>
                         <span
                           style={{
@@ -358,9 +430,8 @@ export default function VendorDashboardPage() {
                             fontWeight: 700,
                             textTransform: "uppercase",
                             letterSpacing: "0.05em",
-                            background: row.statusBg,
-                            color: row.statusText,
-                            border: row.statusBorder || "none",
+                            background: "#39393b",
+                            color: "#ffffff",
                           }}
                         >
                           {row.status}
@@ -382,6 +453,13 @@ export default function VendorDashboardPage() {
                       </td>
                     </tr>
                   ))}
+                  {bookings.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ padding: "48px", textAlign: "center", color: "#919191" }}>
+                        No booking requests found.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

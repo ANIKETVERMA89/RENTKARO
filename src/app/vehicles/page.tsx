@@ -1,42 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TopNav } from "@/components/ui/top-nav";
 import { SiteFooter } from "@/components/ui/site-footer";
 import Link from "next/link";
-
-const vehicles = [
-  {
-    id: "porsche-911-gt3",
-    name: "Porsche 911 GT3",
-    category: "Supercar • 2 Seats",
-    price: "$1,200",
-    power: "502 HP",
-    time: "3.2s",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDam5XrjrnIdIHxbcMtUaTjVot11N9BoP_x2NEtne4IfkTOa0DdWF2Er_lJdUuuYpXQqZKFjY4J-nskzoPyTVhmVKNHo-YARr3c2Ax8MRT8NmFvTXLCtDAXYJA4qOX7mStvdaNIQWi3ugBaqjXalz7IVntdqVSnQDOF7L3EKZL7ZGmmk6f3Gl1maQIp0pAcNxbLINhIKZ1S0BpJ_c8pi0HTVdLgz-6CVXMlBbHkNMkIDoWKaPjzhW_2O9GDPwcHE3T2rtAlhzAJS1GI",
-    alt: "Porsche 911 GT3",
-  },
-  {
-    id: "lamborghini-huracan",
-    name: "Lamborghini Huracán",
-    category: "Supercar • 2 Seats",
-    price: "$1,800",
-    power: "631 HP",
-    time: "2.9s",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCekgUYwRwQ6ySg9nlLDkiWjuuq9iTeo-w3dyLW5a_gTaF9aJ9jaajA0_bW9CwC1jqxSsVW0QyICBUvfxyjveDWU0xl8g8hbATuoknWqBzxK9vBKO6C1dkH6bpuNKlCs_sLNnUOqaskMiYcdaYu-BPsAJhyXXyPtKFkLAdIM1dOaa_KmvXUCmXHLadzMRxHblfxKvGCJyjTw-Av8-gK5reLyZrCnRSIqgurPaxbixfZKKilYQRVmZ8q73eLCXMiPLGA0c5ZjAKJNJch",
-    alt: "Lamborghini Huracán",
-  },
-  {
-    id: "mercedes-g63",
-    name: "Mercedes-AMG G 63",
-    category: "Luxury SUV • 5 Seats",
-    price: "$900",
-    power: "577 HP",
-    time: "4.5s",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCEHesC5jd2NXJBtyaf9YdfMUEKVjCs-7SB4_pFsVT_JYKqVrplL_rPLmt1AS4TomUNHS0v16hMSZz4OlteMipHR21Qi2AayX27dKxbKtyOBxH8igvp65TLe53Cu_cHNDA8hi60gGUuiuxzvoH3gKBfMIO0vEjg117rpW_WVj0QqPp5Dr_E5eMDFZzrRMQlRqfaxphz0t45hom6ot6F17Ataiph45EnnuzYF7IIfMegSc1Swj_Zd6xzEZEIgT90Nj2SQSCEM0vql4R_",
-    alt: "Mercedes G63 AMG",
-  },
-];
 
 const CATEGORIES = ["All", "Supercar", "Luxury Sedan", "SUV", "Electric"];
 const MARQUES = ["All Marques", "Porsche", "Lamborghini", "Ferrari", "Rolls Royce", "Bentley"];
@@ -61,8 +28,29 @@ function FilterSection({ title }: { title: string }) {
 }
 
 export default function BrowseVehiclesPage() {
-  const [selectedCategory, setSelectedCategory] = useState("Supercar");
-  const [selectedMarque, setSelectedMarque] = useState("Porsche");
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedMarque, setSelectedMarque] = useState("All Marques");
+
+  useEffect(() => {
+    fetch("http://localhost:5000/get-vehicles")
+      .then((res) => res.json())
+      .then((data) => {
+        setVehicles(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching vehicles:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  const filteredVehicles = vehicles.filter((v) => {
+    const categoryMatch = selectedCategory === "All" || (v.category && v.category.includes(selectedCategory));
+    const marqueMatch = selectedMarque === "All Marques" || (v.brand && v.brand.toLowerCase() === selectedMarque.toLowerCase());
+    return categoryMatch && marqueMatch;
+  });
 
   return (
     <div style={{ background: "#0c0c0e", color: "#e5e1e4", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -182,8 +170,8 @@ export default function BrowseVehiclesPage() {
                     marginBottom: "16px",
                   }}
                 >
-                  <span>$500</span>
-                  <span>$5,000+</span>
+                  <span>₹500</span>
+                  <span>₹5,000+</span>
                 </div>
                 {/* Track */}
                 <div style={{ position: "relative", height: "3px", background: "#27272a", borderRadius: "2px" }}>
@@ -355,7 +343,7 @@ export default function BrowseVehiclesPage() {
                 gap: "24px",
               }}
             >
-              {vehicles.map((v) => (
+              {filteredVehicles.map((v) => (
                 <Link
                   key={v.id}
                   href={`/vehicles/${v.id}`}
@@ -374,8 +362,8 @@ export default function BrowseVehiclesPage() {
                     {/* Image */}
                     <div style={{ position: "relative", aspectRatio: "16/10", overflow: "hidden" }}>
                       <img
-                        src={v.img}
-                        alt={v.alt}
+                        src={v.image_url || v.img}
+                        alt={v.name}
                         style={{
                           width: "100%",
                           height: "100%",
@@ -405,7 +393,7 @@ export default function BrowseVehiclesPage() {
                         }}
                       >
                         <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#ffffff" }}>
-                          {v.price}<span style={{ color: "#71717a", fontWeight: 400 }}>/day</span>
+                          ₹{v.daily_rate || v.price}<span style={{ color: "#71717a", fontWeight: 400 }}>/day</span>
                         </span>
                       </div>
                     </div>
@@ -424,7 +412,7 @@ export default function BrowseVehiclesPage() {
                         >
                           {v.name}
                         </h3>
-                        <p style={{ color: "#52525b", fontSize: "0.8125rem" }}>{v.category}</p>
+                        <p style={{ color: "#52525b", fontSize: "0.8125rem" }}>{v.category || v.vehicle_type}</p>
                       </div>
 
                       <div
@@ -440,11 +428,11 @@ export default function BrowseVehiclesPage() {
                       >
                         <div>
                           <span style={{ color: "#52525b", fontSize: "0.6875rem", textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: "4px" }}>Power</span>
-                          <span style={{ color: "#e5e1e4", fontSize: "0.9375rem", fontWeight: 600 }}>{v.power}</span>
+                          <span style={{ color: "#e5e1e4", fontSize: "0.9375rem", fontWeight: 600 }}>{v.power || "400 HP"}</span>
                         </div>
                         <div>
                           <span style={{ color: "#52525b", fontSize: "0.6875rem", textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: "4px" }}>0-60 mph</span>
-                          <span style={{ color: "#e5e1e4", fontSize: "0.9375rem", fontWeight: 600 }}>{v.time}</span>
+                          <span style={{ color: "#e5e1e4", fontSize: "0.9375rem", fontWeight: 600 }}>{v.time || "4.2s"}</span>
                         </div>
                       </div>
 

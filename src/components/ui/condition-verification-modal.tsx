@@ -64,6 +64,11 @@ export function ConditionVerificationModal({
           })
         });
 
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Server returned ${response.status}: ${errorText.substring(0, 100)}`);
+        }
+
         const data = await response.json();
         setResult(data);
         setIsAnalyzing(false);
@@ -96,32 +101,36 @@ export function ConditionVerificationModal({
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         className="bg-zinc-950 border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative"
       >
-        <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white p-2 bg-white/5 rounded-full z-10 transition-colors">
+        <button onClick={onClose} className="absolute top-6 right-6 text-white/40 hover:text-white p-2 bg-white/5 rounded-full z-10 transition-colors border border-white/5">
           <X className="w-5 h-5" />
         </button>
 
-        <div className="p-8">
-          <div className="mb-6">
-            <h2 className="text-2xl font-black text-white uppercase tracking-tighter" style={{ fontFamily: "'Outfit', sans-serif" }}>
+        <div className="pt-12 p-8 pb-10">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
               {phase === "pickup" ? "Pickup Verification" : "Return & AI Scan"}
             </h2>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
-              Vehicle: <span className="text-white">{vehicleName}</span>
-            </p>
+            <div className="flex items-center justify-center gap-2">
+              <span className="w-8 h-[1px] bg-white/20"></span>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">
+                Vehicle: <span className="text-white">{vehicleName}</span>
+              </p>
+              <span className="w-8 h-[1px] bg-white/20"></span>
+            </div>
           </div>
 
           {!result ? (
             <div className="space-y-6">
               <div 
-                className="border-2 border-dashed border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 transition-colors"
+                className="border-2 border-dashed border-white/5 rounded-2xl p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/[0.03] hover:border-white/20 transition-all duration-300 group/upload"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                  <Camera className="w-8 h-8 text-slate-400" />
+                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 group-hover/upload:scale-110 transition-transform duration-500">
+                  <Camera className="w-10 h-10 text-slate-400 group-hover/upload:text-white transition-colors" />
                 </div>
-                <h3 className="text-white font-bold mb-2">Capture {phase === "pickup" ? "Pickup" : "Return"} Photos</h3>
-                <p className="text-slate-500 text-sm max-w-[250px]">
-                  Take up to 4 photos of the vehicle (Front, Back, Left, Right). 
+                <h3 className="text-white text-lg font-bold mb-3 tracking-tight">Capture {phase === "pickup" ? "Pickup" : "Return"} Photos</h3>
+                <p className="text-slate-500 text-xs max-w-[280px] leading-relaxed">
+                  Take up to 4 high-quality photos (Front, Back, Left, Right). AI will scan for new damage automatically.
                 </p>
                 <input 
                   ref={fileInputRef}
@@ -167,9 +176,9 @@ export function ConditionVerificationModal({
                 <Button 
                   onClick={handleSubmit} 
                   disabled={images.length === 0}
-                  className="w-full h-14 bg-white text-black font-black uppercase tracking-widest hover:bg-slate-200"
+                  className="w-full h-16 bg-white text-black font-black uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all duration-300 disabled:opacity-50 disabled:bg-white/20 disabled:text-white/40"
                 >
-                  {phase === "pickup" ? "Confirm Pickup Condition" : "Run AI Damage Assessment"}
+                  {phase === "pickup" ? "Confirm Pickup" : "Start AI Assessment"}
                 </Button>
               )}
             </div>

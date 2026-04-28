@@ -6,13 +6,38 @@ const nodemailer = require("nodemailer");
 
 const app = express();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+let transporter;
+
+async function setupTransporter() {
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+    console.log("📧 Gmail Transporter Ready");
+  } else {
+    // Fallback to Ethereal for testing
+    let testAccount = await nodemailer.createTestAccount();
+    transporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+    console.log("📧 Ethereal Test Account Created:");
+    console.log(`   User: ${testAccount.user}`);
+    console.log(`   Pass: ${testAccount.pass}`);
+    console.log(`   Check emails at: https://ethereal.email/messages`);
+  }
+}
+
+setupTransporter();
 
 // Increase limits for image broadcasting
 app.use(express.json({ limit: '50mb' }));
@@ -25,7 +50,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 /* REQUEST LOGGER */
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  res.on('finish', () => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - ${res.statusCode}`);
+  });
   next();
 });
 
@@ -37,13 +64,29 @@ app.get("/", (req, res) => {
 /* SIGNUP */
 app.post("/auth/signup", async (req, res) => {
   try {
-    const { email, password, role } = req.body;
-    console.log(`[Signup] New request for: ${email}`);
-    const { error } = await supabase.from("users").insert([{ email, password, role }]);
-    if (error) return res.status(500).json({ success: false, message: error.message });
-    res.json({ success: true });
+    const { email, password, fullName, role } = req.body;
+    console.log(`[Signup] New request for: ${email} as ${role || 'renter'}`);
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          role: role || 'renter',
+        }
+      }
+    });
+
+    if (error) {
+      console.error("Signup error:", error.message);
+      return res.status(400).json({ success: false, message: error.message });
+    }
+
+    res.json({ success: true, user: data.user, session: data.session });
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error("Signup exception:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
@@ -51,11 +94,44 @@ app.post("/auth/signup", async (req, res) => {
 app.post("/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const { data, error } = await supabase.from("users").select("*").eq("email", email).eq("password", password).single();
-    if (error) return res.status(401).json({ success: false, message: "Invalid credentials" });
-    res.json({ success: true, user: data });
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error("Login error:", error.message);
+      // Pass the specific error message to the frontend (e.g., "Email not confirmed")
+      return res.status(401).json({ success: false, message: error.message });
+    }
+
+    res.json({ success: true, user: data.user, session: data.session });
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error("Login exception:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+/* RESEND VERIFICATION EMAIL */
+app.post("/auth/resend-verification", async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+    });
+
+    if (error) {
+      console.error("Resend error:", error.message);
+      return res.status(400).json({ success: false, message: error.message });
+    }
+
+    res.json({ success: true, message: "Verification email resent." });
+  } catch (err) {
+    console.error("Resend exception:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
@@ -67,6 +143,18 @@ app.get("/get-vehicles", async (req, res) => {
     res.json(data || []);
   } catch (err) {
     res.status(500).json([]);
+  }
+});
+
+/* GET SINGLE VEHICLE */
+app.get("/get-vehicle/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await supabase.from("vehicles").select("*").eq("id", id).single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    res.status(404).json({ success: false, message: "Vehicle not found" });
   }
 });
 
@@ -176,7 +264,7 @@ app.post("/book-vehicle", async (req, res) => {
     `;
 
     transporter.sendMail({
-      from: '"RentKaro Alerts" <' + process.env.EMAIL_USER + '>',
+      from: '"RentKaro Alerts" <' + (process.env.EMAIL_USER || "noreply@rentkaro.com") + '>',
       to: [user_email, providerEmail].filter(Boolean).join(", "),
       subject: `Booking Confirmed: ${vehicleInfo?.brand || ''} ${vehicleInfo?.model || ''}`,
       html: emailHtml
@@ -211,8 +299,234 @@ app.post("/toggle-availability", async (req, res) => {
   }
 });
 
+/* GET BOOKINGS FOR USER */
+app.get("/get-bookings/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    console.log(`[GetBookings] Fetching bookings for: ${email}`);
+    
+    // 1. Fetch bookings for this user
+    const { data: bookingsData, error: bookingsError } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("user_id", email)
+      .order('created_at', { ascending: false });
+
+    if (bookingsError) throw bookingsError;
+
+    if (!bookingsData || bookingsData.length === 0) {
+      return res.json([]);
+    }
+
+    // 2. Fetch corresponding vehicle details manually
+    const vehicleIds = bookingsData.map(b => b.vehicle_id);
+    const { data: vehiclesData, error: vehiclesError } = await supabase
+      .from("vehicles")
+      .select("*")
+      .in("id", vehicleIds);
+
+    if (vehiclesError) throw vehiclesError;
+
+    // 3. Map into the dashboard format
+    const formattedBookings = bookingsData.map(booking => {
+      const vehicle = vehiclesData.find(v => String(v.id) === String(booking.vehicle_id));
+      
+      // Default placeholder if vehicle got deleted
+      if (!vehicle) {
+        return {
+          id: booking.id,
+          car: "Unknown Vehicle",
+          detail: "Vehicle no longer exists",
+          status: "Completed",
+          statusDot: "#3f3f46",
+          period: "Unknown Dates",
+          duration: "N/A",
+          location: "",
+          amount: "₹0",
+          img: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4dyieFQltQJAxjynRu1ck8kq8Gt1sME0tKjmUqMHuF8MGRBvyylrXrbrN6lkMYwsj47cBVfIXLVX-uEloHbt1aHQ-f7elx_7k6iioR8_YpbQyhl5rPNeOPdQ2_vF1XkrSAWrwNPh_5Gto-Y_M99roRIetDslnRdZaX50PH1BXZJL5BgyEOEfMj2Kmtny_YoMzFPUvKipUJo9m4SUnfy7_PQ803OvxDLPLQU7GyPI91eJHhPgFTM8-2hI5x1M5VikLiZHl82m8IwrO",
+          ctaLabel: "Invoice",
+          ctaPrimary: false,
+        };
+      }
+
+      // Convert UTC timestamp to readable date "Oct 15, 2023"
+      const dateStr = new Date(booking.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      return {
+        id: booking.id,
+        car: vehicle.name || `${vehicle.brand} ${vehicle.model}`,
+        detail: `${vehicle.manufacture_year || 2024} · ${vehicle.fuel_type || "Petrol"}`,
+        status: "In Progress", // Default status for new bookings
+        statusDot: "#34d399",
+        period: `Booked: ${dateStr}`,
+        duration: "Active",
+        location: vehicle.location || "Pickup Location",
+        amount: `₹${vehicle.price || vehicle.daily_rate || 0}`,
+        img: vehicle.image_url || vehicle.gallery_images?.[0] || "https://lh3.googleusercontent.com/aida-public/AB6AXuC4dyieFQltQJAxjynRu1ck8kq8Gt1sME0tKjmUqMHuF8MGRBvyylrXrbrN6lkMYwsj47cBVfIXLVX-uEloHbt1aHQ-f7elx_7k6iioR8_YpbQyhl5rPNeOPdQ2_vF1XkrSAWrwNPh_5Gto-Y_M99roRIetDslnRdZaX50PH1BXZJL5BgyEOEfMj2Kmtny_YoMzFPUvKipUJo9m4SUnfy7_PQ803OvxDLPLQU7GyPI91eJHhPgFTM8-2hI5x1M5VikLiZHl82m8IwrO",
+        ctaLabel: "Manage",
+        ctaPrimary: true,
+      };
+    });
+
+    res.json(formattedBookings);
+  } catch (err) {
+    console.error("❌ GetBookings Crash:", err);
+    res.status(500).json([]);
+  }
+});
+
+/* SEND INVOICE EMAIL */
+/* GET PROVIDER VEHICLES */
+app.get("/get-provider-vehicles/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    console.log(`[Fleet] Fetching vehicles for provider: ${email}`);
+    
+    const { data: allVehicles, error } = await supabase
+      .from("vehicles")
+      .select("*");
+
+    if (error) throw error;
+
+    const data = allVehicles?.filter(v => 
+      Array.isArray(v.features) && v.features.some((f) => f === `__PROVIDER__:${email}`)
+    );
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error("❌ Fleet Crash:", err);
+    res.status(500).json([]);
+  }
+});
+
+/* GET PROVIDER BOOKINGS */
+app.get("/get-provider-bookings/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    console.log(`[ProviderBookings] Fetching bookings for provider: ${email}`);
+
+    // 1. Get vehicles owned by this provider
+    const { data: allVehicles, error: vError } = await supabase
+      .from("vehicles")
+      .select("id, name, brand, model, image_url, daily_rate, features");
+
+    if (vError) throw vError;
+    
+    const providerVehicles = allVehicles?.filter(v => 
+      Array.isArray(v.features) && v.features.some((f) => f === `__PROVIDER__:${email}`)
+    );
+
+    if (vError) throw vError;
+    if (!providerVehicles || providerVehicles.length === 0) return res.json([]);
+
+    const vehicleIds = providerVehicles.map(v => String(v.id));
+
+    // 2. Get bookings for these vehicles
+    const { data: bookings, error: bError } = await supabase
+      .from("bookings")
+      .select("*")
+      .in("vehicle_id", vehicleIds)
+      .order('created_at', { ascending: false });
+
+    if (bError) throw bError;
+
+    // 3. Format response
+    const formatted = bookings.map(b => {
+      const v = providerVehicles.find(veh => String(veh.id) === String(b.vehicle_id));
+      return {
+        ...b,
+        vehicle_name: v?.name || `${v?.brand} ${v?.model}`,
+        vehicle_img: v?.image_url,
+        amount: v?.daily_rate,
+        status: "Active"
+      };
+    });
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("❌ ProviderBookings Crash:", err);
+    res.status(500).json([]);
+  }
+});
+
+/* END RIDE / COMPLETE BOOKING */
+app.post("/end-ride", async (req, res) => {
+  try {
+    const { booking_id, vehicle_id } = req.body;
+    console.log(`[EndRide] Finalizing booking ${booking_id} for vehicle ${vehicle_id}`);
+
+    // 1. Update booking status to "Completed"
+    const { error: bError } = await supabase
+      .from("bookings")
+      .update({ status: "Completed" })
+      .eq("id", booking_id);
+
+    if (bError) throw bError;
+
+    // 2. Unlock vehicle for next renter
+    if (vehicle_id) {
+      const { error: vError } = await supabase
+        .from("vehicles")
+        .update({ available: true })
+        .eq("id", vehicle_id);
+      if (vError) console.error("⚠️ Failed to unlock vehicle:", vError.message);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ EndRide Crash:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+app.post("/send-invoice", async (req, res) => {
+  try {
+    const { user_email, booking_id, pdf_base64, car_name } = req.body;
+    console.log(`[Invoice] Sending to ${user_email} for booking ${booking_id}`);
+
+    if (!user_email || !pdf_base64) {
+      return res.status(400).json({ success: false, message: "Missing data" });
+    }
+
+    const mailOptions = {
+      from: `"RentKaro Invoice" <${process.env.EMAIL_USER || "noreply@rentkaro.com"}>`,
+      to: user_email,
+      subject: `Final Invoice: ${car_name || 'Your Ride'} (#${String(booking_id).slice(0, 8)})`,
+      text: `Hello, thank you for riding with RentKaro! Please find your final invoice attached.`,
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #111;">Ride Completed! ✅</h2>
+          <p>Thank you for choosing <strong>RentKaro</strong> for your journey with the <strong>${car_name || 'Vehicle'}</strong>.</p>
+          <p>Your final invoice is attached to this email as a PDF.</p>
+          <br/>
+          <p style="font-size: 12px; color: #777;">Safe travels,<br/>The RentKaro Team</p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: `RentKaro_Invoice_${String(booking_id).slice(0, 8)}.pdf`,
+          content: pdf_base64.split("base64,")[1] || pdf_base64,
+          encoding: 'base64'
+        }
+      ]
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log("✅ Invoice email sent successfully");
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Invoice Email Crash:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`==========================================`);
-  console.log(`RentKaro FINAL BACKEND: PORT ${PORT}`);
+  console.log(`RentKaro FINAL BACKEND: RUNNING`);
+  console.log(`- Port: ${PORT}`);
+  console.log(`- Time: ${new Date().toISOString()}`);
   console.log(`==========================================`);
+}).on('error', (err) => {
+  console.error("❌ SERVER FAILED TO START:", err);
 });

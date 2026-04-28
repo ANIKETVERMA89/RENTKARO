@@ -1,15 +1,100 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { TopNav } from "@/components/ui/top-nav";
 import { SiteFooter } from "@/components/ui/site-footer";
-import Link from "next/link";
+import { motion } from "framer-motion";
+import { createClient } from "@supabase/supabase-js";
 
-const specs = [
-  { icon: "speed", value: "3.5s", label: "0-60 mph" },
-  { icon: "local_gas_station", value: "443", label: "Horsepower" },
-  { icon: "settings_input_component", value: "PDK", label: "Transmission" },
-  { icon: "airline_seat_recline_normal", value: "2+2", label: "Seating" },
-];
+const supabase = createClient(
+  "https://hdujjdioyxnrtbgxiqeb.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdWpqZGlveXhucnRiZ3hpcWViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4OTE5NDIsImV4cCI6MjA5MTQ2Nzk0Mn0.cATYqSGr_N7NWF7O_ZjHnMBXC7yUkuRp9r5nDhQBZBw"
+);
 
 export default function VehicleDetailPage() {
+  const params = useParams();
+  const id = params?.id;
+  const [vehicle, setVehicle] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
+  const [bookingStatus, setBookingStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
+
+  useEffect(() => {
+    // Get logged-in user session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSessionEmail(session?.user?.email ?? null);
+    });
+
+    if (id) {
+      fetch(`http://localhost:5000/get-vehicle/${id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setVehicle(data);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error fetching vehicle:", err);
+          setLoading(false);
+        });
+    }
+  }, [id]);
+
+  const handleReserve = async () => {
+    if (!sessionEmail) {
+      alert("Please log in to book this vehicle.");
+      window.location.href = "/login";
+      return;
+    }
+
+    setBookingStatus("processing");
+    try {
+      const response = await fetch("http://localhost:5000/book-vehicle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_email: sessionEmail,
+          vehicle_id: id,
+          start_date: "2026-05-01", // Placeholder dates
+          end_date: "2026-05-03",
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setBookingStatus("success");
+      } else {
+        setBookingStatus("error");
+      }
+    } catch (err) {
+      console.error("Booking error:", err);
+      setBookingStatus("error");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ background: "#131315", color: "#e5e1e4", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p>Loading masterpiece...</p>
+      </div>
+    );
+  }
+
+  if (!vehicle) {
+    return (
+      <div style={{ background: "#131315", color: "#e5e1e4", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p>Vehicle not found.</p>
+      </div>
+    );
+  }
+
+  const specs = [
+    { icon: "speed", value: vehicle.time || "3.5s", label: "0-60 mph" },
+    { icon: "local_gas_station", value: vehicle.power || "443", label: "Horsepower" },
+    { icon: "settings_input_component", value: vehicle.transmission || "PDK", label: "Transmission" },
+    { icon: "airline_seat_recline_normal", value: vehicle.seats || "2+2", label: "Seating" },
+  ];
+
   return (
     <div style={{ background: "#131315", color: "#e5e1e4", minHeight: "100vh" }}>
       <TopNav />
@@ -21,8 +106,8 @@ export default function VehicleDetailPage() {
       >
         <div className="absolute inset-0 z-0">
           <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_NafghYh1aUu79XrwBjH6wTOcrIv2XP_y1QROwpM2D-47cXFLpE_qRQOW9ysBLD6CH7Qxb1dFy8ZGvrIj52-JNuvl6bYPJeXZQdaSI218geHySoovIYS9Sd0Q7zmZDDw7fp8TZDjdO6_jJAs-IOPUtDwC06rhyV5OK3hX4iM36KW5iUrQGkhaAy3ehGwv_OwRORaXaVKujxvaolBulB6JWJW1A-K-y387I-6Q1X3VDGugtRHRjdTf_Ojrg3t3IsA_GAyxywp1TSkL"
-            alt="Porsche 911 Carrera S"
+            src={vehicle.image_url}
+            alt={vehicle.name}
             style={{
               width: "100%",
               height: "100%",
@@ -53,7 +138,7 @@ export default function VehicleDetailPage() {
               marginBottom: "16px",
             }}
           >
-            Porsche 911 Carrera S
+            {vehicle.name}
           </h1>
           <p
             style={{
@@ -65,7 +150,7 @@ export default function VehicleDetailPage() {
               fontWeight: 300,
             }}
           >
-            The quintessential sports car, refined for the modern era.
+            {vehicle.category || vehicle.vehicle_type || "Exotic performance and luxury refined."}
           </p>
         </div>
       </header>
@@ -161,13 +246,13 @@ export default function VehicleDetailPage() {
               The Experience
             </h2>
             <p style={{ color: "#c6c6cb", lineHeight: "1.8", marginBottom: "24px", fontSize: "1.0625rem" }}>
-              Driving the 911 Carrera S is a masterclass in balance and precision. The twin-turbo flat-six engine
+              Driving the {vehicle.name} is a masterclass in balance and precision. The engineering excellence 
               delivers relentless power, while the perfectly tuned chassis ensures it feels planted on every corner.
               It&apos;s a vehicle that communicates clearly with the driver, offering a visceral connection to the road
               without sacrificing touring comfort.
             </p>
             <p style={{ color: "#c6c6cb", lineHeight: "1.8", fontSize: "1.0625rem" }}>
-              Inside, the cabin is a blend of analog heritage and digital modernity. The driving position is flawless,
+              Inside, the cabin is a blend of heritage and modernity. The driving position is flawless,
               materials are top-tier, and the focus remains entirely on the art of driving. This is not just a rental;
               it is an event.
             </p>
@@ -200,7 +285,7 @@ export default function VehicleDetailPage() {
                     color: "#ffffff",
                   }}
                 >
-                  $850
+                  ₹{vehicle.daily_rate || vehicle.price}
                 </span>
                 <span style={{ color: "#c6c6cb", fontSize: "0.875rem", marginLeft: "4px" }}>/ day</span>
               </div>
@@ -238,59 +323,66 @@ export default function VehicleDetailPage() {
               ))}
             </div>
 
-            {/* Price breakdown */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "12px",
-                marginBottom: "32px",
-                paddingTop: "24px",
-                borderTop: "1px solid rgba(255,255,255,0.05)",
-              }}
-            >
-              {[
-                { label: "$850 x 2 days", value: "$1,700" },
-                { label: "Concierge Fee", value: "$150" },
-                { label: "Insurance (Premium)", value: "$200" },
-              ].map((item) => (
-                <div key={item.label} className="flex justify-between" style={{ color: "#c6c6cb" }}>
-                  <span>{item.label}</span>
-                  <span style={{ color: "#ffffff" }}>{item.value}</span>
-                </div>
-              ))}
+            {/* Logged-in user email indicator */}
+            <div style={{ marginBottom: "32px" }}>
+              <label style={{ display: "block", color: "#c6c6cb", fontSize: "0.875rem", marginBottom: "8px" }}>
+                Booking As
+              </label>
               <div
-                className="flex justify-between"
                 style={{
-                  fontWeight: 700,
-                  fontSize: "1.125rem",
-                  paddingTop: "16px",
-                  borderTop: "1px solid rgba(255,255,255,0.05)",
+                  width: "100%",
+                  background: "#1b1b1d",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: "0.5rem",
+                  padding: "16px",
+                  color: sessionEmail ? "#ffffff" : "#71717a",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  fontSize: "0.875rem",
                 }}
               >
-                <span style={{ color: "#ffffff" }}>Total</span>
-                <span style={{ color: "#ffffff" }}>$2,050</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "18px", color: sessionEmail ? "#34d399" : "#52525b" }}>
+                  {sessionEmail ? "verified_user" : "lock"}
+                </span>
+                {sessionEmail ?? "Not logged in — please sign in to book"}
               </div>
             </div>
 
-            <Link
-              href="/login"
+            <button
+              onClick={handleReserve}
+              disabled={bookingStatus === "processing"}
               style={{
                 display: "block",
                 width: "100%",
                 padding: "16px",
                 borderRadius: "0.75rem",
-                background: "#39393b",
-                color: "#ffffff",
+                background: bookingStatus === "success" ? "#10b981" : "#ffffff",
+                color: "#000000",
                 fontWeight: 700,
                 letterSpacing: "0.05em",
                 textAlign: "center",
-                textDecoration: "none",
-                transition: "filter 0.3s ease",
+                border: "none",
+                cursor: bookingStatus === "processing" ? "not-allowed" : "pointer",
+                transition: "all 0.3s ease",
+                opacity: bookingStatus === "processing" ? 0.7 : 1,
               }}
             >
-              Reserve Now
-            </Link>
+              {bookingStatus === "idle" && "Reserve Now"}
+              {bookingStatus === "processing" && "Processing..."}
+              {bookingStatus === "success" && "Booking Confirmed!"}
+              {bookingStatus === "error" && "Try Again"}
+            </button>
+
+            {bookingStatus === "success" && (
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ color: "#10b981", fontSize: "0.875rem", textAlign: "center", marginTop: "16px" }}
+              >
+                Confirmation email sent successfully!
+              </motion.p>
+            )}
           </div>
         </div>
       </main>

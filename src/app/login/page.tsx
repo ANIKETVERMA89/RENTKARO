@@ -1,6 +1,69 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  "https://hdujjdioyxnrtbgxiqeb.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdWpqZGlveXhucnRiZ3hpcWViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4OTE5NDIsImV4cCI6MjA5MTQ2Nzk0Mn0.cATYqSGr_N7NWF7O_ZjHnMBXC7yUkuRp9r5nDhQBZBw"
+);
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("loading");
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("http://localhost:5000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        // 1. Sync Supabase Session
+        if (result.session) {
+          await supabase.auth.setSession(result.session);
+        }
+        
+        // 2. Sync Custom App Store (localStorage)
+        if (result.user) {
+          const userRole = result.user.user_metadata?.role || 'renter';
+          localStorage.setItem('rk_user', JSON.stringify({
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.user_metadata?.full_name || result.user.email?.split('@')[0] || "User",
+            role: userRole
+          }));
+
+          // Redirect based on role
+          if (userRole === 'provider') {
+            router.push("/vendor");
+          } else {
+            router.push("/dashboard/bookings");
+          }
+        }
+      } else {
+        setErrorMessage(result.message || "Invalid email or password.");
+        setStatus("error");
+      }
+    } catch (err) {
+      setErrorMessage("Network error occurred.");
+      setStatus("error");
+    }
+  };
+
   return (
     <div
       className="relative flex items-center justify-center overflow-hidden"
@@ -53,7 +116,7 @@ export default function LoginPage() {
             boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
           }}
         >
-          <form style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             {/* Email */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <label
@@ -73,6 +136,9 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                   style={{
                     width: "100%",
                     background: "rgba(14,14,16,0.5)",
@@ -110,6 +176,9 @@ export default function LoginPage() {
                   id="password"
                   type="password"
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                   style={{
                     width: "100%",
                     background: "rgba(14,14,16,0.5)",
@@ -125,25 +194,41 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {status === "error" && (
+              <div style={{ color: "#ef4444", fontSize: "0.875rem", textAlign: "center", background: "rgba(239, 68, 68, 0.1)", padding: "12px", borderRadius: "8px" }}>
+                {errorMessage}
+                {errorMessage.includes("Email not confirmed") && (
+                  <div style={{ marginTop: "8px" }}>
+                    <Link href={`/verify?email=${encodeURIComponent(email)}`} style={{ color: "#ffffff", textDecoration: "underline" }}>
+                      Resend Verification Email
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Submit */}
-            <Link
-              href="/dashboard/bookings"
+            <button
+              type="submit"
+              disabled={status === "loading"}
               style={{
                 display: "block",
+                width: "100%",
                 marginTop: "16px",
                 padding: "16px",
-                background: "#39393b",
+                background: status === "loading" ? "#52525b" : "#39393b",
                 color: "#ffffff",
                 fontWeight: 500,
                 borderRadius: "9999px",
+                border: "none",
+                cursor: status === "loading" ? "not-allowed" : "pointer",
                 textAlign: "center",
-                textDecoration: "none",
-                transition: "opacity 0.3s ease",
+                transition: "background 0.3s ease",
                 boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
               }}
             >
-              Sign In
-            </Link>
+              {status === "loading" ? "Signing In..." : "Sign In"}
+            </button>
           </form>
 
           {/* Social */}

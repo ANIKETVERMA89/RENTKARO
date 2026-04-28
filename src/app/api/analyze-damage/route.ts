@@ -1,16 +1,30 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-// Helper to convert base64 data URL to GoogleGenerativeAI Part object
+// Helper: convert base64 data URL → Gemini part
 function base64ToGenerativePart(base64DataUrl: string, mimeType: string) {
-  // Remove the data:image/[type];base64, prefix
-  const base64String = base64DataUrl.split(',')[1];
-  return {
-    inlineData: {
-      data: base64String,
-      mimeType
-    },
-  };
+  const base64String = base64DataUrl.split(",")[1];
+  return { inlineData: { data: base64String, mimeType } };
+}
+
+// Helper: fetch a remote URL image and convert to Gemini part
+async function urlToGenerativePart(url: string) {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const base64 = Buffer.from(arrayBuffer).toString("base64");
+  const mimeType = response.headers.get("content-type") || "image/jpeg";
+  return { inlineData: { data: base64, mimeType } };
+}
+
+// Convert any image (data URL or https URL) to a Gemini-compatible part
+async function imageToGenerativePart(image: string) {
+  if (image.startsWith("data:")) {
+    const mime = image.split(";")[0].split(":")[1];
+    return base64ToGenerativePart(image, mime);
+  } else if (image.startsWith("http")) {
+    return await urlToGenerativePart(image);
+  }
+  return null;
 }
 
 export async function POST(req: Request) {
@@ -26,88 +40,87 @@ export async function POST(req: Request) {
 
     if (!apiKey) {
       console.warn("⚠️ No GEMINI_API_KEY found. Running simulated damage analysis.");
-      // Fallback: Simulate a scan if the user hasn't set up the API key yet.
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate delay
-      
-      const isDamaged = Math.random() > 0.5; // 50% chance of damage in simulation
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       return NextResponse.json({
         damageAssessed: true,
-        damageFound: isDamaged,
-        description: isDamaged ? "Simulated API Response: Scratch detected on the front bumper. (Add GEMINI_API_KEY for real AI analysis)" : "Simulated API Response: No new damage found. Vehicle is clean. (Add GEMINI_API_KEY for real AI analysis)",
-        deductionAmount: isDamaged ? 1500 : 0
+        damageFound: false,
+        description: "Simulated: No new damage found. Add GEMINI_API_KEY for real AI analysis.",
+        deductionAmount: 0,
       });
     }
 
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    // Prepare prompt
     const prompt = `
-      You are an expert vehicle damage assessor. 
-      You are given two sets of images of the same rental vehicle. 
-      Set 1: Images taken at PICKUP (before rental).
-      Set 2: Images taken at RETURN (after rental).
-      
-      Compare the Return images against the Pickup images.
-      Identify any NEW physical damage (scratches, dents, broken parts, etc.) that did not exist in the Pickup images.
-      
-      If you find new damage, estimate a logical repair cost deduction in INR (Indian Rupees).
-      
-      Respond STRICTLY in the following JSON format without formatting backticks or extra text:
+      You are an expert vehicle damage assessor for a car rental company.
+      You will be shown two vehicle images:
+      - Image 1: The PICKUP photo (vehicle condition BEFORE the rental, the baseline).
+      - Image 2: The RETURN photo (vehicle condition AFTER the rental, uploaded by the renter).
+
+      Your job is to carefully compare Image 2 against Image 1 and identify any NEW physical damage
+      such as scratches, dents, cracks, broken mirrors, or other anomalies that were NOT present in Image 1.
+
+      Be strict but fair. Only flag damage that is clearly NEW compared to the pickup photo.
+      If the images show the same condition, report no damage.
+
+      If you find new damage, estimate a reasonable repair cost in INR (Indian Rupees).
+
+      Respond STRICTLY in this JSON format with no extra text or markdown backticks:
       {
-        "damageFound": true/false,
-        "description": "Short description of the new damage found, or 'No new damage found' if clean.",
-        "deductionAmount": integer number (0 if no damage, or estimated INR amount)
+        "damageFound": true or false,
+        "description": "Clear description of the new damage found, or 'No new damage detected. Vehicle returned in good condition.' if clean.",
+        "deductionAmount": integer (0 if no damage, or INR estimate)
       }
     `;
 
-    // Process images. Assuming payload sends base64 data URLs: 'data:image/jpeg;base64,...'
-    // To keep the payload small, we'll just take the first pickup image and first return image for the analysis prompt.
-    // (A real production system would send all angles).
-    
-    let parts: any[] = [prompt];
-    
-    // Add first pickup image
-    if (pickupImages[0].startsWith('data:')) {
-      const mime = pickupImages[0].split(';')[0].split(':')[1];
-      parts.push(base64ToGenerativePart(pickupImages[0], mime));
-    }
-    
-    // Add first return image
-    if (returnImages[0].startsWith('data:')) {
-      const mime = returnImages[0].split(';')[0].split(':')[1];
-      parts.push(base64ToGenerativePart(returnImages[0], mime));
+    // Convert both images (supports both data: URLs and https:// URLs)
+    const pickupPart = await imageToGenerativePart(pickupImages[0]);
+    const returnPart = await imageToGenerativePart(returnImages[0]);
+
+    if (!pickupPart || !returnPart) {
+      return NextResponse.json(
+        { error: "Could not process one or more images. Please try again." },
+        { status: 400 }
+      );
     }
 
-    if (parts.length < 3) {
-      return NextResponse.json({ error: "Invalid image format. Expected base64 data URLs." }, { status: 400 });
-    }
-
-    const result = await model.generateContent(parts);
+    console.log("🤖 Sending images to Gemini for damage analysis...");
+    const result = await model.generateContent([prompt, pickupPart, returnPart]);
     const responseText = result.response.text();
-    
-    console.log("Gemini Raw Response:", responseText); // Debugging
+
+    console.log("Gemini Raw Response:", responseText);
 
     // Parse the JSON output from Gemini
     try {
-       // Clean up potential markdown formatting block
-      const cleanJsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const cleanJsonStr = responseText
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
       const parsed = JSON.parse(cleanJsonStr);
-      
+
       return NextResponse.json({
         damageAssessed: true,
-        damageFound: parsed.damageFound,
+        damageFound: parsed.damageFound === true,
         description: parsed.description,
-        deductionAmount: parsed.deductionAmount
+        deductionAmount: Number(parsed.deductionAmount) || 0,
       });
     } catch (parseError) {
       console.error("Failed to parse Gemini output:", responseText);
-      return NextResponse.json({ error: "AI response parsing failed" }, { status: 500 });
+      return NextResponse.json(
+        { error: "AI response parsing failed. Please try again." },
+        { status: 500 }
+      );
     }
-
   } catch (error: any) {
-    console.error("AI Analysis Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("AI Analysis Error (Falling back to safe result):", error);
+    // Return a safe fallback so the user is not blocked from completing their return
+    return NextResponse.json({
+      damageAssessed: true,
+      damageFound: false,
+      description: "AI analysis was temporarily unavailable. Vehicle accepted in current condition (Manual check recommended).",
+      deductionAmount: 0,
+    });
   }
 }

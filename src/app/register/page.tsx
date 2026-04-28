@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const formFields = [
@@ -8,6 +12,60 @@ const formFields = [
 ];
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "renter" as "renter" | "provider",
+  });
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      setStatus("error");
+      return;
+    }
+
+    setStatus("loading");
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("http://localhost:5000/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          role: formData.role,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        // Redirect to verify page with email
+        router.push(`/verify?email=${encodeURIComponent(formData.email)}`);
+      } else {
+        setErrorMessage(result.message || "Registration failed.");
+        setStatus("error");
+      }
+    } catch (err) {
+      setErrorMessage("Network error occurred.");
+      setStatus("error");
+    }
+  };
+
   return (
     <div
       className="relative flex items-center justify-center overflow-hidden"
@@ -90,7 +148,42 @@ export default function RegisterPage() {
               Create an account
             </h2>
 
-            <form style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ marginBottom: "32px" }}>
+              <p style={{ fontSize: "0.875rem", color: "#c6c6cb", marginBottom: "12px", letterSpacing: "0.02em" }}>
+                I want to join as:
+              </p>
+              <div className="flex gap-4">
+                {[
+                  { id: "renter", label: "Renter", icon: "person" },
+                  { id: "provider", label: "Provider", icon: "storefront" },
+                ].map((role) => (
+                  <button
+                    key={role.id}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, role: role.id as any }))}
+                    style={{
+                      flex: 1,
+                      padding: "12px",
+                      background: formData.role === role.id ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.03)",
+                      border: formData.role === role.id ? "1px solid #ffffff" : "1px solid rgba(71,71,71,0.2)",
+                      borderRadius: "0.75rem",
+                      color: formData.role === role.id ? "#ffffff" : "#c6c6cb",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>{role.icon}</span>
+                    <span style={{ fontSize: "0.8125rem", fontWeight: 500 }}>{role.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               {formFields.map((field) => (
                 <div key={field.id} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label
@@ -117,6 +210,9 @@ export default function RegisterPage() {
                       id={field.id}
                       type={field.type}
                       placeholder={field.placeholder}
+                      value={formData[field.id as keyof typeof formData]}
+                      onChange={handleChange}
+                      required
                       style={{
                         width: "100%",
                         background: "transparent",
@@ -133,9 +229,16 @@ export default function RegisterPage() {
                 </div>
               ))}
 
+              {status === "error" && (
+                <div style={{ color: "#ef4444", fontSize: "0.875rem", textAlign: "center" }}>
+                  {errorMessage}
+                </div>
+              )}
+
               <div style={{ paddingTop: "16px" }}>
-                <Link
-                  href="/login"
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -143,18 +246,19 @@ export default function RegisterPage() {
                     gap: "8px",
                     width: "100%",
                     padding: "16px",
-                    background: "#ffffff",
+                    background: status === "loading" ? "#a1a1aa" : "#ffffff",
                     color: "#000000",
                     fontWeight: 500,
                     fontSize: "0.9375rem",
                     borderRadius: "9999px",
-                    textDecoration: "none",
-                    transition: "opacity 0.3s ease",
+                    border: "none",
+                    cursor: status === "loading" ? "not-allowed" : "pointer",
+                    transition: "all 0.3s ease",
                   }}
                 >
-                  Create Account
-                  <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>arrow_forward</span>
-                </Link>
+                  {status === "loading" ? "Creating Account..." : "Create Account"}
+                  {status !== "loading" && <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>arrow_forward</span>}
+                </button>
               </div>
             </form>
 

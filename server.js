@@ -41,7 +41,11 @@ setupTransporter();
 
 // Increase limits for image broadcasting
 app.use(express.json({ limit: '50mb' }));
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 
 /* SUPABASE CONNECTION */
 const supabaseUrl = "https://hdujjdioyxnrtbgxiqeb.supabase.co";

@@ -62,9 +62,15 @@ export default function LoginPage() {
         setErrorMessage(result.message || "Invalid email or password.");
         setStatus("error");
       }
-    } catch (err) {
-      setErrorMessage("Network error occurred.");
+    } catch (err: any) {
+      console.error("❌ FULL LOGIN ERROR:", err);
+      console.error("❌ ERROR MESSAGE:", err.message);
+      console.error("❌ STACK TRACE:", err.stack);
+      
+      setErrorMessage(`Network error occurred: ${err.message || "Unknown error"}`);
       setStatus("error");
+    } finally {
+      setStatus("idle");
     }
   };
 

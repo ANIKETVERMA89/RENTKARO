@@ -15,6 +15,7 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost
  */
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  console.log(`🌐 API REQUEST: ${url}`);
   
   const headers = new Headers(options.headers || {});
   headers.set("bypass-tunnel-reminder", "true");

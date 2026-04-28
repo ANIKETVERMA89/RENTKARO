@@ -20,10 +20,12 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    alert("🚀 Login process started...");
     setStatus("loading");
     setErrorMessage("");
 
     try {
+      alert("🌐 Calling API: " + `${API_BASE_URL}/auth/login`);
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { 
@@ -33,7 +35,9 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
+      alert("✅ API Response status: " + res.status);
       const result = await res.json();
+      alert("📦 Result: " + JSON.stringify(result).slice(0, 100));
 
       if (res.ok && result.success) {
         // 1. Sync Supabase Session

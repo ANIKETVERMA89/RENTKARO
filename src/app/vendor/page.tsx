@@ -101,8 +101,8 @@ export default function VendorDashboardPage() {
       try {
         const user = JSON.parse(localStorage.getItem("rk_user") || "{}");
         const [fleetRes, bookingsRes] = await Promise.all([
-          fetch(`http://localhost:5000/get-provider-vehicles/${user.email}`),
-          fetch(`http://localhost:5000/get-provider-bookings/${user.email}`)
+          fetch(`${API_BASE_URL}/get-provider-vehicles/${user.email}`),
+          fetch(`${API_BASE_URL}/get-provider-bookings/${user.email}`)
         ]);
         
         const fleetData = await fleetRes.json();
@@ -119,8 +119,11 @@ export default function VendorDashboardPage() {
     fetchData();
   }, []);
 
-  const totalRevenue = bookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
-  const activeBookings = bookings.length;
+  const completedBookings = bookings.filter(b => b.status === "Completed");
+  const inProgressBookings = bookings.filter(b => b.status !== "Completed");
+
+  const totalRevenue = completedBookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+  const activeBookings = inProgressBookings.length;
   const fleetUtilization = vehicles.length > 0 ? Math.round((activeBookings / vehicles.length) * 100) : 0;
 
   const dynamicMetrics = [

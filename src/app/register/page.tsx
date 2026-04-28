@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/api";
 
 const formFields = [
   { id: "fullName", label: "Full Name", type: "text", placeholder: "John Doe", icon: "person" },
@@ -40,7 +41,7 @@ export default function RegisterPage() {
     setErrorMessage("");
 
     try {
-      const res = await fetch("http://localhost:5000/auth/signup", {
+      const res = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

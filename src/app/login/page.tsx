@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import { API_BASE_URL } from "@/lib/api";
 
 const supabase = createClient(
   "https://hdujjdioyxnrtbgxiqeb.supabase.co",
@@ -23,7 +24,7 @@ export default function LoginPage() {
     setErrorMessage("");
 
     try {
-      const res = await fetch("http://localhost:5000/auth/login", {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

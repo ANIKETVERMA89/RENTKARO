@@ -4,6 +4,7 @@ import { SideNav } from "@/components/ui/side-nav";
 import { useState, useEffect } from "react";
 import { ConditionVerificationModal } from "@/components/ui/condition-verification-modal";
 import { createClient } from "@supabase/supabase-js";
+import { API_BASE_URL } from "@/lib/api";
 import { generateInvoicePDF, getInvoiceBase64 } from "@/lib/invoice-generator";
 
 const supabase = createClient(
@@ -62,7 +63,7 @@ export default function UserDashboardPage() {
         }
 
         // Fetch their actual bookings from our backend
-        const res = await fetch(`http://localhost:5000/get-bookings/${encodeURIComponent(email)}`);
+        const res = await fetch(`${API_BASE_URL}/get-bookings/${encodeURIComponent(email)}`);
         const data = await res.json();
         setBookingsList(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -95,7 +96,7 @@ export default function UserDashboardPage() {
     // 2. Persist to Database
     try {
       console.log("📨 Finalizing booking in database...");
-      await fetch("http://localhost:5000/end-ride", {
+      await fetch(`${API_BASE_URL}/end-ride`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -110,7 +111,7 @@ export default function UserDashboardPage() {
       const pdfBase64 = getInvoiceBase64(completedBooking, userEmail);
       
       console.log("📨 Sending invoice email to:", userEmail);
-      const res = await fetch("http://localhost:5000/send-invoice", {
+      const res = await fetch(`${API_BASE_URL}/send-invoice`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

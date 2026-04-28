@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { SideNav } from "@/components/ui/side-nav";
+import { API_BASE_URL } from "@/lib/api";
 
 const vendorNav = [
   { icon: "dashboard", label: "Dashboard", href: "/vendor" },
@@ -19,7 +20,7 @@ export default function VendorRevenuePage() {
     const fetchRevenueData = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("rk_user") || "{}");
-        const res = await fetch(`http://localhost:5000/get-provider-bookings/${user.email}`);
+        const res = await fetch(`${API_BASE_URL}/get-provider-bookings/${user.email}`);
         const data = await res.json();
         setBookings(data);
       } catch (err) {

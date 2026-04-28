@@ -354,10 +354,11 @@ app.get("/get-bookings/:email", async (req, res) => {
 
       return {
         id: booking.id,
+        vehicle_id: booking.vehicle_id,
         car: vehicle.name || `${vehicle.brand} ${vehicle.model}`,
         detail: `${vehicle.manufacture_year || 2024} · ${vehicle.fuel_type || "Petrol"}`,
-        status: "In Progress", // Default status for new bookings
-        statusDot: "#34d399",
+        status: booking.status || "In Progress",
+        statusDot: booking.status === "Completed" ? "#3f3f46" : "#34d399",
         period: `Booked: ${dateStr}`,
         duration: "Active",
         location: vehicle.location || "Pickup Location",
@@ -439,7 +440,7 @@ app.get("/get-provider-bookings/:email", async (req, res) => {
         vehicle_name: v?.name || `${v?.brand} ${v?.model}`,
         vehicle_img: v?.image_url,
         amount: v?.daily_rate,
-        status: "Active"
+        status: b.status || "Active"
       };
     });
 

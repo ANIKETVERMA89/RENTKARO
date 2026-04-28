@@ -7,7 +7,7 @@ const headers = {
   "bypass-tunnel-reminder": "true",
 };
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+export const API_BASE_URL = "https://hzyo11-ip-122-161-68-177.tunnelmole.net";
 
 /**
  * Standard utility for making API requests to the backend.

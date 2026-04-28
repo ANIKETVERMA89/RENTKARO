@@ -2,6 +2,11 @@
  * Backend API Base URL
  * Reads from `.env.local` variable `NEXT_PUBLIC_API_URL`
  */
+const headers = {
+  "Content-Type": "application/json",
+  "bypass-tunnel-reminder": "true",
+};
+
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 /**
@@ -12,6 +17,8 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
   
   const headers = new Headers(options.headers || {});
+  headers.set("bypass-tunnel-reminder", "true");
+  
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }

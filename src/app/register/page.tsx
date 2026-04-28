@@ -43,7 +43,10 @@ export default function RegisterPage() {
     try {
       const res = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "bypass-tunnel-reminder": "true"
+        },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,

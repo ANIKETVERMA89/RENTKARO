@@ -6,6 +6,7 @@ import { TopNav } from "@/components/ui/top-nav";
 import { SiteFooter } from "@/components/ui/site-footer";
 import { motion } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
+import { API_BASE_URL } from "@/lib/api";
 
 const supabase = createClient(
   "https://hdujjdioyxnrtbgxiqeb.supabase.co",
@@ -27,7 +28,7 @@ export default function VehicleDetailPage() {
     });
 
     if (id) {
-      fetch(`http://localhost:5000/get-vehicle/${id}`)
+      fetch(`${API_BASE_URL}/get-vehicle/${id}`)
         .then((res) => res.json())
         .then((data) => {
           setVehicle(data);
@@ -49,7 +50,7 @@ export default function VehicleDetailPage() {
 
     setBookingStatus("processing");
     try {
-      const response = await fetch("http://localhost:5000/book-vehicle", {
+      const response = await fetch(`${API_BASE_URL}/book-vehicle`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { SideNav } from "@/components/ui/side-nav";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/api";
 
 const vendorNav = [
   { icon: "dashboard", label: "Dashboard", href: "/vendor" },

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SideNav } from "@/components/ui/side-nav";
 
+import { API_BASE_URL } from "@/lib/api";
+
 const vendorNav = [
   { icon: "dashboard", label: "Dashboard", href: "/vendor" },
   { icon: "directions_car", label: "Fleet Status", href: "/vendor/fleet" },
@@ -60,7 +62,7 @@ export default function AddVehiclePage() {
         owner: { name: user.name },
       };
 
-      const res = await fetch("http://localhost:5000/add-vehicle", {
+      const res = await fetch(`${API_BASE_URL}/add-vehicle`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

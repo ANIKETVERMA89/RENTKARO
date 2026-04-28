@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function ProviderDashboard() {
   const { user, vehicles, bookings } = useApp();
@@ -34,7 +35,7 @@ export default function ProviderDashboard() {
   const [isBackendOnline, setIsBackendOnline] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
-    fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000")
+    fetch(API_BASE_URL)
       .then(res => res.text())
       .then(text => setIsBackendOnline(text.includes("HEALTHY")))
       .catch(() => setIsBackendOnline(false));

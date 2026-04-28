@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { TopNav } from "@/components/ui/top-nav";
 import { SiteFooter } from "@/components/ui/site-footer";
+import { API_BASE_URL } from "@/lib/api";
 import { motion } from "framer-motion";
 
 function VerifyContent() {
@@ -19,7 +20,7 @@ function VerifyContent() {
     
     setResendStatus("loading");
     try {
-      const res = await fetch("http://localhost:5000/auth/resend-verification", {
+      const res = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

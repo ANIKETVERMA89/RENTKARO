@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { TopNav } from "@/components/ui/top-nav";
 import { SiteFooter } from "@/components/ui/site-footer";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/api";
 
 const CATEGORIES = ["All", "Supercar", "Luxury Sedan", "SUV", "Electric"];
 const MARQUES = ["All Marques", "Porsche", "Lamborghini", "Ferrari", "Rolls Royce", "Bentley"];
@@ -34,7 +35,7 @@ export default function BrowseVehiclesPage() {
   const [selectedMarque, setSelectedMarque] = useState("All Marques");
 
   useEffect(() => {
-    fetch("http://localhost:5000/get-vehicles")
+    fetch(`${API_BASE_URL}/get-vehicles`)
       .then((res) => res.json())
       .then((data) => {
         setVehicles(data);

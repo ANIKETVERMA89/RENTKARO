@@ -6,10 +6,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
     const { data, error } = await supabase.from("vehicles").select("*").eq("id", id).single();
     

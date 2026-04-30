@@ -7,7 +7,7 @@ const headers = {
   "bypass-tunnel-reminder": "true",
 };
 
-export const API_BASE_URL = "https://hzyo11-ip-122-161-68-177.tunnelmole.net";
+export const API_BASE_URL = "/api";
 
 /**
  * Standard utility for making API requests to the backend.
